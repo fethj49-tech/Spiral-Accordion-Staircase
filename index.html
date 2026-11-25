@@ -1,0 +1,1868 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>TechroLenx Visual Studio × TechroTone Audio — Spiral Accordion Staircase (SAS)</title>
+<style>
+  :root {
+    --bg: #070510;
+    --panel: rgba(15, 12, 29, 0.90);
+    --border: rgba(154, 120, 255, 0.38);
+    --accent: #a78bfa;
+    --cyan: #38bdf8;
+    --gold: #fbbf24;
+    --pink: #f472b6;
+    --mint: #34d399;
+    --text: #f5f2ff;
+    --muted: #9e95c2;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; user-select: none; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg); color: var(--text); font-family: system-ui, -apple-system, sans-serif; }
+  #viewport { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+
+  .hud-top {
+    position: fixed; top: 10px; left: 10px; right: 10px; z-index: 10;
+    display: flex; flex-wrap: wrap; gap: 8px; justify-content: space-between; align-items: center;
+    pointer-events: none;
+  }
+  .badge-card {
+    pointer-events: auto;
+    background: var(--panel); backdrop-filter: blur(10px);
+    border: 1px solid var(--border); border-radius: 12px;
+    padding: 8px 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  }
+  .brand-title { font-size: 12px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--cyan); }
+  .brand-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+  .mode-switch { display: flex; gap: 6px; flex-wrap: wrap; }
+  .btn {
+    pointer-events: auto; cursor: pointer;
+    background: rgba(31, 25, 56, 0.92); color: var(--text);
+    border: 1px solid var(--border); border-radius: 10px;
+    padding: 7px 10px; font-size: 11px; font-weight: 700;
+    transition: transform 0.12s, background 0.15s, border-color 0.15s;
+  }
+  .btn:active { transform: scale(0.95); }
+  .btn.active { background: linear-gradient(135deg, #6d28d9, #0284c7); border-color: #fff; }
+  .btn.gold { border-color: var(--gold); color: var(--gold); }
+  .btn.mint { border-color: var(--mint); color: var(--mint); }
+  .btn.pink { border-color: var(--pink); color: var(--pink); }
+
+  .story-bar {
+    position: fixed; top: 68px; left: 10px; right: 10px; z-index: 9;
+    display: flex; justify-content: space-between; align-items: center; gap: 6px; flex-wrap: wrap;
+    pointer-events: none;
+  }
+  .pill {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 999px;
+    padding: 5px 11px; font-size: 11px; font-weight: 600; backdrop-filter: blur(8px);
+  }
+  .state-indicator { color: var(--gold); font-weight: 800; letter-spacing: 0.05em; }
+  .bond-indicator { color: var(--mint); font-weight: 800; }
+
+  .goal-bar-wrap {
+    position: fixed; top: 102px; left: 10px; right: 10px; z-index: 9;
+    display: flex; align-items: center; gap: 8px; pointer-events: none;
+  }
+  .goal-track {
+    flex: 1; height: 8px; border-radius: 999px;
+    background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.16);
+    overflow: hidden; position: relative;
+  }
+  .goal-fill {
+    height: 100%; width: 0%;
+    background: linear-gradient(90deg, #38bdf8, #34d399, #fbbf24);
+    transition: width 0.22s ease;
+  }
+  .goal-marker {
+    position: absolute; top: 0; bottom: 0; width: 3px; background: #fff;
+  }
+
+  .gesture-hint {
+    position: fixed; top: 134px; left: 50%; transform: translateX(-50%);
+    z-index: 8; pointer-events: none;
+    background: rgba(15, 12, 29, 0.72); border: 1px solid rgba(255,255,255,0.14);
+    border-radius: 999px; padding: 3px 12px; font-size: 10px; color: var(--muted);
+    white-space: nowrap;
+  }
+
+  .center-toast {
+    position: fixed; top: 38%; left: 50%; transform: translate(-50%, -50%);
+    z-index: 15; pointer-events: none; text-align: center;
+    background: rgba(12, 10, 24, 0.92); border: 1px solid rgba(255,255,255,0.28);
+    padding: 12px 18px; border-radius: 14px; font-size: 13px; font-weight: 800;
+    opacity: 0; transition: opacity 0.22s; max-width: 90vw;
+  }
+  .center-toast.show { opacity: 1; }
+
+  /* Unlockables & Records Modal */
+  .vault-modal {
+    position: fixed; inset: 0; z-index: 25;
+    background: rgba(5, 3, 14, 0.82); backdrop-filter: blur(8px);
+    display: none; align-items: center; justify-content: center; padding: 14px;
+  }
+  .vault-modal.open { display: flex; }
+  .vault-card {
+    width: 100%; max-width: 440px; max-height: 82vh; overflow-y: auto;
+    background: #120e24; border: 1px solid var(--border); border-radius: 18px;
+    padding: 16px; box-shadow: 0 20px 50px rgba(0,0,0,0.7);
+  }
+  .vault-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .vault-stats {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px;
+  }
+  .stat-box {
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.09);
+    border-radius: 10px; padding: 8px; text-align: center;
+  }
+  .stat-val { font-size: 14px; font-weight: 800; color: var(--gold); }
+  .stat-lbl { font-size: 10px; color: var(--muted); margin-top: 2px; }
+  .perk-item {
+    display: flex; justify-content: space-between; align-items: center; gap: 10px;
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px; padding: 10px; margin-bottom: 8px;
+  }
+  .perk-title { font-size: 12px; font-weight: 800; color: var(--text); }
+  .perk-desc { font-size: 10px; color: var(--muted); margin-top: 2px; }
+
+  .studio-deck {
+    position: fixed; bottom: 10px; left: 10px; right: 10px; z-index: 10;
+    background: var(--panel); backdrop-filter: blur(12px);
+    border: 1px solid var(--border); border-radius: 16px;
+    padding: 9px 12px; display: flex; flex-direction: column; gap: 8px;
+  }
+  .dials-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .dial-box {
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.09);
+    border-radius: 12px; padding: 6px 10px;
+  }
+  .dial-header { display: flex; justify-content: space-between; font-size: 11px; font-weight: 700; margin-bottom: 4px; }
+  .dial-zone { color: var(--cyan); font-size: 10px; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  input[type="range"] { width: 100%; accent-color: var(--accent); height: 6px; border-radius: 4px; background: #231d3b; }
+
+  .precision-row {
+    display: flex; flex-wrap: wrap; gap: 6px; justify-content: space-between; align-items: center;
+    background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px; padding: 5px 8px;
+  }
+  .step-readout { font-size: 10px; font-weight: 800; color: var(--cyan); }
+
+  .actions-row { display: flex; flex-wrap: wrap; gap: 6px; justify-content: space-between; align-items: center; }
+  .score-readout { font-size: 11px; font-weight: 800; color: var(--gold); }
+  .fx-palette { display: flex; gap: 5px; flex-wrap: wrap; }
+  .fx-chip {
+    padding: 5px 8px; border-radius: 8px; font-size: 10px; font-weight: 700;
+    background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.16); color: var(--text);
+  }
+  .fx-chip.selected { border-color: var(--pink); background: rgba(244,114,182,0.24); color: #fff; }
+</style>
+</head>
+<body>
+
+<canvas id="viewport"></canvas>
+
+<div class="hud-top">
+  <div class="badge-card">
+    <div class="brand-title">Spiral Accordion Staircase (SAS)</div>
+    <div class="brand-sub" id="levelSubTitle">Level 1/10: Dawn Bellows • Gary &amp; Mary</div>
+  </div>
+  <div class="mode-switch">
+    <button id="btnAudioStart" class="btn gold">▶ Ignite Audio</button>
+    <button id="btnModeClimb" class="btn active">Climb Game</button>
+    <button id="btnOpenVault" class="btn mint">🏆 Unlocks &amp; Highs</button>
+    <button id="btnModeStudio" class="btn">Studio</button>
+    <button id="btnModeAIDance" class="btn">AI Dance</button>
+  </div>
+</div>
+
+<div class="story-bar">
+  <div class="pill" id="storyBanner">LVL 1/10 • Unique Track Seeded • Reach Summit #35</div>
+  <div class="pill"><span class="bond-indicator" id="abbotBond">🤝 HAND-IN-HAND WALTZ</span></div>
+  <div class="pill"><span class="state-indicator" id="transportState">LEVEL 1 CLIMB</span></div>
+</div>
+
+<div class="goal-bar-wrap">
+  <div class="pill" id="locationBadge" style="color:#38bdf8; font-weight:800;">🎵 RUN #1 • LVL 1 TRACK</div>
+  <div class="goal-track">
+    <div class="goal-fill" id="summitProgress"></div>
+    <div class="goal-marker" style="left:34.2%" title="Step #12: Velvet Bellows Lounge"></div>
+    <div class="goal-marker" style="left:68.5%" title="Step #24: Clockwork Echo Vault"></div>
+  </div>
+  <div class="pill" id="footholdTimerPill" style="color:#34d399; font-weight:800;">FOOTHOLD: 100%</div>
+</div>
+
+<div class="gesture-hint" id="gestureHint">
+  Tap: Step +1 • Flick Up: Leap +2 • Double-Tap: Land Lit • Flick Down: Step -1
+</div>
+
+<div class="center-toast" id="toast"></div>
+
+<!-- Unlockables & High Scores Modal -->
+<div class="vault-modal" id="vaultModal">
+  <div class="vault-card">
+    <div class="vault-header">
+      <div style="font-size:14px; font-weight:800; color:var(--gold);">🏆 SAS Records &amp; Unlockables</div>
+      <button class="btn" id="btnCloseVault">✕ Close</button>
+    </div>
+    <div class="vault-stats">
+      <div class="stat-box">
+        <div class="stat-val" id="vaultHighScore">0</div>
+        <div class="stat-lbl">HIGH SCORE</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val" id="vaultBestLevel">1/10</div>
+        <div class="stat-lbl">BEST LEVEL</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val" id="vaultClears">0</div>
+        <div class="stat-lbl">GAME CLEARS</div>
+      </div>
+    </div>
+    <div style="font-size:11px; color:var(--muted); margin-bottom:10px;">
+      Total Career Points Earned: <strong id="vaultCareerPts" style="color:var(--cyan);">0</strong> (Unlocks stay forever &amp; carry across replays!)
+    </div>
+    <div id="perksList"></div>
+  </div>
+</div>
+
+<div class="studio-deck">
+  <div class="dials-row">
+    <div class="dial-box">
+      <div class="dial-header">
+        <span>REALM SHIFTER DIAL</span>
+        <span id="realmPct">20%</span>
+      </div>
+      <input type="range" id="dialRealm" min="0" max="100" value="20" />
+      <div class="dial-zone" id="realmLabel">Zone 2: Parametric Bellows Dawn</div>
+    </div>
+    <div class="dial-box">
+      <div class="dial-header">
+        <span>TOWER CLIMB / WHISPER</span>
+        <span id="towerPct">35%</span>
+      </div>
+      <input type="range" id="dialTower" min="0" max="100" value="35" />
+      <div class="dial-zone" id="towerLabel">Ascending Gear-Spiral Flight</div>
+    </div>
+  </div>
+
+  <div class="precision-row">
+    <div style="display:flex; gap:5px; align-items:center; flex-wrap:wrap;">
+      <button class="btn" id="btnStepPrev">◀ Step -1</button>
+      <button class="btn mint" id="btnStepLit">🎯 Land Lit</button>
+      <button class="btn" id="btnStepNext">Step +1 ▶</button>
+      <button class="btn" id="btnPrecisionLeap">⬆ Land Leap (+2)</button>
+      <button class="btn pink" id="btnExitBonus" style="display:none;">🚪 Return to Staircase</button>
+      <button class="btn gold" id="btnNewRun">↻ New Run</button>
+    </div>
+    <div class="step-readout" id="stepPrecisionBox">LVL 1 • STEP #0/35 | STREAK x1</div>
+  </div>
+
+  <div class="actions-row">
+    <div class="fx-palette" id="fxPalette">
+      <button class="fx-chip selected" data-fx="jump">FX: Hand-Hold Jump</button>
+      <button class="fx-chip" data-fx="split">FX: Multi-Spiral Split</button>
+      <button class="fx-chip" data-fx="vortex">FX: Vortex Flip</button>
+      <button class="fx-chip" data-fx="whisper">FX: Summit Whisper</button>
+    </div>
+    <div style="display:flex; gap:6px; align-items:center;">
+      <button class="btn" id="btnForesight">⚡ Predict Turn</button>
+      <div class="score-readout" id="scoreBox">SCORE: 0 | BEST: 0</div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(() => {
+  // =========================================================================
+  // 0. 10-LEVEL DEFINITIONS & PERSISTENT HIGH SCORES / UNLOCKABLES
+  // =========================================================================
+  const LEVELS = [
+    { level: 1,  name: "Dawn Bellows",       hue: 0.58, tempo: 112, drain: 0.075, wave: 'sawtooth',  octMult: 1.0,  bonusMult: 1.0 },
+    { level: 2,  name: "Velvet Drift",       hue: 0.44, tempo: 116, drain: 0.085, wave: 'triangle',  octMult: 1.0,  bonusMult: 1.15 },
+    { level: 3,  name: "Clockwork Gears",    hue: 0.52, tempo: 120, drain: 0.095, wave: 'sawtooth',  octMult: 1.0,  bonusMult: 1.25 },
+    { level: 4,  name: "Mirror Fold",        hue: 0.74, tempo: 124, drain: 0.105, wave: 'square',    octMult: 1.0,  bonusMult: 1.4 },
+    { level: 5,  name: "Fractal Waltz",      hue: 0.86, tempo: 128, drain: 0.115, wave: 'triangle',  octMult: 1.25, bonusMult: 1.55 },
+    { level: 6,  name: "Crimson Spire",      hue: 0.96, tempo: 132, drain: 0.125, wave: 'sawtooth',  octMult: 1.0,  bonusMult: 1.75 },
+    { level: 7,  name: "Astral Turbine",     hue: 0.64, tempo: 136, drain: 0.135, wave: 'sine',      octMult: 1.5,  bonusMult: 1.95 },
+    { level: 8,  name: "Neon Labyrinth",     hue: 0.80, tempo: 140, drain: 0.145, wave: 'square',    octMult: 1.25, bonusMult: 2.2 },
+    { level: 9,  name: "Singularity Ascent", hue: 0.08, tempo: 144, drain: 0.155, wave: 'sawtooth',  octMult: 1.5,  bonusMult: 2.5 },
+    { level: 10, name: "Crown of Whispers",  hue: 0.13, tempo: 150, drain: 0.165, wave: 'triangle',  octMult: 2.0,  bonusMult: 3.0 }
+  ];
+
+  const PERKS_CATALOG = [
+    {
+      id: 'gold_bellows',
+      title: '✨ Royal Gold Bellows Finish',
+      desc: 'Shimmers Gary & Mary with golden instrument trim.',
+      reqPts: 1500
+    },
+    {
+      id: 'steady_grip',
+      title: '🥾 Steady Grip Boots',
+      desc: 'Reduces foothold stability drain by 30% on every climb.',
+      reqPts: 3000
+    },
+    {
+      id: 'crystal_harp',
+      title: '🎐 Crystal Whisper Overtone',
+      desc: 'Adds a sparkling upper harmonic voice to generated notes.',
+      reqPts: 5000
+    },
+    {
+      id: 'encore_crown',
+      title: '👑 Encore Master Crown (+25% Score)',
+      desc: 'Unlocked by beating Level 10! Boosts all score gains by +25%.',
+      reqPts: 999999,
+      requiresClear: true
+    }
+  ];
+
+  const STORAGE_KEY = 'sas_techrolenx_records_v1';
+  function loadRecords() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        return {
+          highScore: parsed.highScore || 0,
+          bestLevel: parsed.bestLevel || 1,
+          gameClears: parsed.gameClears || 0,
+          careerPts: parsed.careerPts || 0,
+          activePerks: parsed.activePerks || {
+            gold_bellows: true,
+            steady_grip: true,
+            crystal_harp: true,
+            encore_crown: true
+          }
+        };
+      }
+    } catch (_) {}
+    return {
+      highScore: 0,
+      bestLevel: 1,
+      gameClears: 0,
+      careerPts: 0,
+      activePerks: { gold_bellows: true, steady_grip: true, crystal_harp: true, encore_crown: true }
+    };
+  }
+
+  const records = loadRecords();
+  function saveRecords() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(records)); } catch (_) {}
+  }
+
+  function isPerkUnlocked(perk) {
+    if (perk.requiresClear) return records.gameClears >= 1;
+    return records.careerPts >= perk.reqPts;
+  }
+
+  // =========================================================================
+  // 1. TECHROTONE SESSION + LEVEL GENERATIVE AUDIO ENGINE (NON-REPEATING)
+  // =========================================================================
+  class TechroToneEngine {
+    constructor() {
+      this.ctx = null;
+      this.master = null;
+      this.running = false;
+      this.stepIndex = 0;
+      this.tempo = 112;
+      this.realmValue = 0.20;
+      this.towerValue = 0.35;
+      this.whisperActive = false;
+      this.lastInterval = 0;
+      this.predictedTurn = 1;
+      this.lastBeatTime = 0;
+
+      this.scales = [
+        [261.63, 293.66, 329.63, 392.00, 440.00, 523.25],
+        [261.63, 293.66, 311.13, 392.00, 415.30, 523.25],
+        [261.63, 293.66, 329.63, 369.99, 440.00, 493.88],
+        [220.00, 261.63, 293.66, 329.63, 392.00, 440.00],
+        [261.63, 277.18, 329.63, 349.23, 392.00, 466.16]
+      ];
+
+      this.runSeed = Math.floor(Math.random() * 100000);
+      this.levelTrackDNA = null;
+      this.savedMainSnapshot = null;
+      this.activeLocationSong = 'MAIN';
+      this.bonusStep = 0;
+      this.generateLevelTrack(1, true);
+    }
+
+    generateLevelTrack(levelNum, isNewRun = false) {
+      if (isNewRun) {
+        this.runSeed = Math.floor(Math.random() * 100000) + 1;
+      }
+      // Deterministic-feeling per-(runSeed, levelNum) unique song DNA that never repeats across runs/levels
+      const mix = ((this.runSeed * 7919 + levelNum * 104729) >>> 0);
+      const scaleIdx = mix % this.scales.length;
+      const motif = Array.from({ length: 8 }, (_, k) => ((mix >> (k * 3)) + k * 2 + levelNum) % 6);
+      const rootShift = [0.8909, 0.9438, 1.0, 1.0594, 1.1224][((mix >> 11) + levelNum) % 5];
+      const swingBias = 0.35 + (((mix % 17) / 17) * 1.35);
+      const lvlCfg = LEVELS[Math.min(LEVELS.length - 1, Math.max(0, levelNum - 1))];
+
+      this.levelTrackDNA = { scaleIdx, motif, rootShift, swingBias, wave: lvlCfg.wave, octMult: lvlCfg.octMult };
+      this.tempo = lvlCfg.tempo;
+      this.stepIndex = 0;
+      this.lastInterval = motif[0];
+      this.savedMainSnapshot = null;
+      this.activeLocationSong = 'MAIN';
+    }
+
+    enterBonusSong(roomId) {
+      if (this.activeLocationSong === 'MAIN') {
+        this.savedMainSnapshot = {
+          stepIndex: this.stepIndex,
+          lastInterval: this.lastInterval,
+          predictedTurn: this.predictedTurn
+        };
+      }
+      this.activeLocationSong = roomId;
+      this.bonusStep = 0;
+    }
+
+    returnToMainSong() {
+      if (this.savedMainSnapshot) {
+        this.stepIndex = this.savedMainSnapshot.stepIndex;
+        this.lastInterval = this.savedMainSnapshot.lastInterval;
+        this.predictedTurn = this.savedMainSnapshot.predictedTurn;
+      }
+      this.activeLocationSong = 'MAIN';
+    }
+
+    init() {
+      if (this.ctx) {
+        if (this.ctx.state === 'suspended') this.ctx.resume();
+        this.running = true;
+        return;
+      }
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      this.ctx = new AudioCtx();
+      this.master = this.ctx.createGain();
+      this.master.gain.value = 0.28;
+      this.master.connect(this.ctx.destination);
+      this.running = true;
+    }
+
+    triggerVoice(freq, duration, isWhisper = false, isTell = false, isHarmony = false, waveOverride = null) {
+      if (!this.ctx || !this.running) return;
+      const now = this.ctx.currentTime;
+      const osc1 = this.ctx.createOscillator();
+      const osc2 = this.ctx.createOscillator();
+      const filter = this.ctx.createBiquadFilter();
+      const env = this.ctx.createGain();
+
+      if (isWhisper) {
+        osc1.type = 'sine';
+        osc2.type = 'sine';
+        osc1.frequency.setValueAtTime(freq * 4, now);
+        osc2.frequency.setValueAtTime(freq * 4.006, now);
+        filter.type = 'bandpass';
+        filter.frequency.setValueAtTime(freq * 4, now);
+        filter.Q.value = 14;
+        env.gain.setValueAtTime(0.0001, now);
+        env.gain.exponentialRampToValueAtTime(0.085, now + 0.04);
+        env.gain.exponentialRampToValueAtTime(0.0001, now + duration * 1.9);
+      } else {
+        const baseWave = waveOverride || (this.levelTrackDNA ? this.levelTrackDNA.wave : 'sawtooth');
+        osc1.type = isHarmony ? 'triangle' : baseWave;
+        osc2.type = 'triangle';
+        const detune = (this.realmValue - 0.5) * 20;
+        osc1.frequency.setValueAtTime(freq, now);
+        osc2.frequency.setValueAtTime(freq * (isTell ? 1.5 : 0.5), now);
+        osc1.detune.setValueAtTime(detune, now);
+
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(480 + this.towerValue * 2900 + (isTell ? 850 : 0), now);
+        filter.Q.value = 3.5 + this.realmValue * 6;
+
+        const peak = (isHarmony ? 0.09 : 0.14) + this.towerValue * 0.14;
+        env.gain.setValueAtTime(0.001, now);
+        env.gain.linearRampToValueAtTime(peak, now + 0.025);
+        env.gain.exponentialRampToValueAtTime(0.001, now + duration);
+      }
+
+      osc1.connect(filter);
+      osc2.connect(filter);
+      filter.connect(env);
+      env.connect(this.master);
+
+      osc1.start(now);
+      osc2.start(now);
+      osc1.stop(now + duration * 2);
+      osc2.stop(now + duration * 2);
+
+      // Unlocked Crystal Whisper Overtone perk
+      if (!isWhisper && records.activePerks.crystal_harp && isPerkUnlocked(PERKS_CATALOG[2]) && isTell) {
+        const harpOsc = this.ctx.createOscillator();
+        const harpGain = this.ctx.createGain();
+        harpOsc.type = 'sine';
+        harpOsc.frequency.setValueAtTime(freq * 2, now);
+        harpGain.gain.setValueAtTime(0.0001, now);
+        harpGain.gain.exponentialRampToValueAtTime(0.045, now + 0.02);
+        harpGain.gain.exponentialRampToValueAtTime(0.0001, now + duration * 1.5);
+        harpOsc.connect(harpGain);
+        harpGain.connect(this.master);
+        harpOsc.start(now);
+        harpOsc.stop(now + duration * 1.6);
+      }
+    }
+
+    playSlipSound() {
+      if (!this.ctx || !this.running) return;
+      [330, 277.18, 220, 164.81].forEach((f, i) => {
+        setTimeout(() => this.triggerVoice(f, 0.14, false, false, true, 'triangle'), i * 55);
+      });
+    }
+
+    playFanfareSound() {
+      if (!this.ctx || !this.running) return;
+      [261.63, 329.63, 392.00, 523.25, 659.25].forEach((f, i) => {
+        setTimeout(() => this.triggerVoice(f, 0.32, false, true, false, 'triangle'), i * 85);
+      });
+    }
+
+    nextGenerativeNote(isSplit) {
+      this.lastBeatTime = performance.now();
+
+      if (this.activeLocationSong === 'VELVET_LOUNGE') {
+        const waltzNotes = [196.00, 246.94, 293.66, 392.00, 329.63, 293.66];
+        const idx = this.bonusStep % waltzNotes.length;
+        const freq = waltzNotes[idx];
+        const isAccent = (this.bonusStep % 3 === 0);
+        this.triggerVoice(freq, 0.32, false, isAccent, !isAccent, 'triangle');
+        if (isAccent) this.triggerVoice(freq * 1.5, 0.26, false, false, true, 'sine');
+        this.bonusStep++;
+        this.predictedTurn = (this.bonusStep % 2 === 0) ? 1 : -1;
+        return { idx, freq, isWhisper: false, isTell: isAccent, isLeap: false, direction: this.predictedTurn };
+      }
+
+      if (this.activeLocationSong === 'CLOCKWORK_VAULT') {
+        const vaultArp = [293.66, 349.23, 440.00, 523.25, 587.33, 440.00, 349.23, 329.63];
+        const idx = this.bonusStep % vaultArp.length;
+        const freq = vaultArp[idx];
+        const isAccent = (this.bonusStep % 4 === 0);
+        this.triggerVoice(freq, 0.21, false, isAccent, false, 'sawtooth');
+        this.triggerVoice(freq * 0.5, 0.22, false, false, true, 'triangle');
+        this.bonusStep++;
+        this.predictedTurn = (idx < 4) ? 1 : -1;
+        return { idx, freq, isWhisper: false, isTell: isAccent, isLeap: isAccent, direction: this.predictedTurn };
+      }
+
+      const dna = this.levelTrackDNA;
+      const scale = this.scales[dna.scaleIdx];
+      const motifNote = dna.motif[this.stepIndex % dna.motif.length];
+      const phiStep = Math.floor(((this.stepIndex * (1.6180339 * dna.swingBias)) % 1) * scale.length);
+      const idx = (phiStep + motifNote + this.lastInterval) % scale.length;
+      this.lastInterval = idx;
+
+      const towerBoost = this.towerValue > 0.72 ? 2 : (this.towerValue < 0.2 ? 0.5 : 1);
+      const freq = scale[idx] * dna.rootShift * dna.octMult * towerBoost;
+      const isWhisper = this.towerValue >= 0.92 || this.whisperActive;
+      const isTell = (this.stepIndex % 4 === 3);
+      const isLeap = Math.abs(idx - ((this.stepIndex * 3) % scale.length)) >= 3;
+
+      this.predictedTurn = (idx >= scale.length / 2) ? 1 : -1;
+      this.triggerVoice(freq, isWhisper ? 0.7 : 0.25, isWhisper, isTell, false);
+
+      if (isSplit && !isWhisper) {
+        const harmFreq = scale[(idx + 2) % scale.length] * dna.rootShift * dna.octMult * towerBoost;
+        this.triggerVoice(harmFreq, 0.24, false, false, true);
+      }
+
+      this.stepIndex++;
+      return { idx, freq, isWhisper, isTell, isLeap, direction: this.predictedTurn };
+    }
+  }
+
+  const audio = new TechroToneEngine();
+
+  // =========================================================================
+  // 2. TECHROLENX 3D ENGINE + LANDING TELEGRAPHING RETICLES
+  // =========================================================================
+  const canvas = document.getElementById('viewport');
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false, powerPreference: 'high-performance' });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setClearColor(0x090616, 1);
+
+  const scene = new THREE.Scene();
+  scene.fog = new THREE.FogExp2(0x090616, 0.024);
+
+  const camera = new THREE.PerspectiveCamera(58, window.innerWidth / window.innerHeight, 0.1, 260);
+  camera.position.set(0, 8, 22);
+
+  const backdropGroup = new THREE.Group();
+  scene.add(backdropGroup);
+
+  const domeMat = new THREE.MeshBasicMaterial({
+    color: 0x130b2e,
+    side: THREE.BackSide,
+    depthWrite: false
+  });
+  const realmDome = new THREE.Mesh(new THREE.SphereGeometry(110, 24, 24), domeMat);
+  backdropGroup.add(realmDome);
+
+  const strataRings = [];
+  for (let r = 0; r < 5; r++) {
+    const ringGeo = new THREE.TorusGeometry(14 + r * 4.5, 0.09, 8, 64);
+    const ringMat = new THREE.MeshBasicMaterial({
+      color: 0x38bdf8,
+      transparent: true,
+      opacity: 0.22
+    });
+    const ring = new THREE.Mesh(ringGeo, ringMat);
+    ring.rotation.x = Math.PI / 2;
+    ring.position.y = (r - 2) * 5;
+    backdropGroup.add(ring);
+    strataRings.push(ring);
+  }
+
+  const starCount = 320;
+  const starPositions = new Float32Array(starCount * 3);
+  for (let i = 0; i < starCount; i++) {
+    starPositions[i * 3] = (Math.random() - 0.5) * 90;
+    starPositions[i * 3 + 1] = (Math.random() - 0.5) * 70;
+    starPositions[i * 3 + 2] = (Math.random() - 0.5) * 90;
+  }
+  const starGeo = new THREE.BufferGeometry();
+  starGeo.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
+  const starMat = new THREE.PointsMaterial({ color: 0xe9d5ff, size: 0.45, transparent: true, opacity: 0.75 });
+  const backdropStars = new THREE.Points(starGeo, starMat);
+  backdropGroup.add(backdropStars);
+
+  const ambientLight = new THREE.AmbientLight(0x9b87f5, 0.92);
+  scene.add(ambientLight);
+  const keyLight = new THREE.DirectionalLight(0xffffff, 1.35);
+  keyLight.position.set(12, 24, 15);
+  scene.add(keyLight);
+  const rimLight = new THREE.PointLight(0x38bdf8, 2.3, 60);
+  rimLight.position.set(-10, 6, -8);
+  scene.add(rimLight);
+
+  const mainSpiralGroup = new THREE.Group();
+  const branchSpiralA = new THREE.Group();
+  const branchSpiralB = new THREE.Group();
+  const innerGearGroup = new THREE.Group();
+  const fxNodesGroup = new THREE.Group();
+  const bonusRoomGroup = new THREE.Group();
+  scene.add(mainSpiralGroup, branchSpiralA, branchSpiralB, innerGearGroup, fxNodesGroup, bonusRoomGroup);
+
+  const MAIN_STEPS = 36;
+  const SUMMIT_STEP = MAIN_STEPS - 1;
+  const BONUS_STEP_1 = 12;
+  const BONUS_STEP_2 = 24;
+  const BRANCH_STEPS = 24;
+  const INNER_STEPS = 24;
+
+  const mainSteps = [];
+  const branchASteps = [];
+  const branchBSteps = [];
+  const innerSteps = [];
+  const bonusOrbs = [];
+
+  const stepGeo = new THREE.BoxGeometry(2.15, 0.34, 1.05);
+  const branchGeo = new THREE.BoxGeometry(1.65, 0.28, 0.85);
+  const gearToothGeo = new THREE.CylinderGeometry(0.45, 0.45, 0.4, 6);
+
+  for (let i = 0; i < MAIN_STEPS; i++) {
+    const isBonus1 = (i === BONUS_STEP_1);
+    const isBonus2 = (i === BONUS_STEP_2);
+    const isSummit = (i === SUMMIT_STEP);
+    const baseColor = isSummit
+      ? new THREE.Color(0xfbbf24)
+      : (isBonus1 ? new THREE.Color(0x34d399) : (isBonus2 ? new THREE.Color(0xf472b6) : new THREE.Color().setHSL((i / MAIN_STEPS) * 0.75 + 0.55, 0.82, 0.56)));
+
+    const mat = new THREE.MeshStandardMaterial({
+      color: baseColor,
+      roughness: 0.28,
+      metalness: (isBonus1 || isBonus2 || isSummit) ? 0.55 : 0.25
+    });
+    const mesh = new THREE.Mesh(stepGeo, mat);
+    mainSpiralGroup.add(mesh);
+    mainSteps.push(mesh);
+
+    if (isBonus1 || isBonus2 || isSummit) {
+      const beaconColor = isSummit ? 0xfbbf24 : (isBonus1 ? 0x34d399 : 0xf472b6);
+      const beacon = new THREE.Mesh(
+        new THREE.OctahedronGeometry(isSummit ? 0.58 : 0.44, 0),
+        new THREE.MeshBasicMaterial({ color: beaconColor, wireframe: true })
+      );
+      beacon.position.set(0, 0.95, 0);
+      mesh.add(beacon);
+
+      const pillar = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.14, 0.42, 2.2, 12, 1, true),
+        new THREE.MeshBasicMaterial({ color: beaconColor, transparent: true, opacity: 0.24, side: THREE.DoubleSide })
+      );
+      pillar.position.set(0, 1.1, 0);
+      mesh.add(pillar);
+    }
+  }
+
+  for (let i = 0; i < BRANCH_STEPS; i++) {
+    const matA = new THREE.MeshStandardMaterial({
+      color: 0x38bdf8, emissive: 0x082f49, roughness: 0.3, metalness: 0.3, transparent: true, opacity: 0.92
+    });
+    const meshA = new THREE.Mesh(branchGeo, matA);
+    branchSpiralA.add(meshA);
+    branchASteps.push(meshA);
+
+    const matB = new THREE.MeshStandardMaterial({
+      color: 0xf472b6, emissive: 0x4c0519, roughness: 0.3, metalness: 0.3, transparent: true, opacity: 0.92
+    });
+    const meshB = new THREE.Mesh(branchGeo, matB);
+    branchSpiralB.add(meshB);
+    branchBSteps.push(meshB);
+  }
+
+  for (let i = 0; i < INNER_STEPS; i++) {
+    const mat = new THREE.MeshStandardMaterial({
+      color: 0xfbbf24, emissive: 0x3b1d00, roughness: 0.28, metalness: 0.55
+    });
+    const mesh = new THREE.Mesh(gearToothGeo, mat);
+    innerGearGroup.add(mesh);
+    innerSteps.push(mesh);
+  }
+
+  for (let b = 0; b < 6; b++) {
+    const orb = new THREE.Mesh(
+      new THREE.TorusKnotGeometry(0.32, 0.1, 32, 8),
+      new THREE.MeshStandardMaterial({ color: 0xfbbf24, emissive: 0x92400e, metalness: 0.6, roughness: 0.2 })
+    );
+    bonusRoomGroup.add(orb);
+    bonusOrbs.push(orb);
+  }
+  bonusRoomGroup.visible = false;
+
+  const nextTargetReticle = new THREE.Mesh(
+    new THREE.RingGeometry(0.55, 0.78, 24),
+    new THREE.MeshBasicMaterial({ color: 0x34d399, side: THREE.DoubleSide, transparent: true, opacity: 0.85 })
+  );
+  nextTargetReticle.rotation.x = Math.PI / 2;
+  scene.add(nextTargetReticle);
+
+  const leapTargetReticle = new THREE.Mesh(
+    new THREE.RingGeometry(0.45, 0.64, 24),
+    new THREE.MeshBasicMaterial({ color: 0xfbbf24, side: THREE.DoubleSide, transparent: true, opacity: 0.65 })
+  );
+  leapTargetReticle.rotation.x = Math.PI / 2;
+  scene.add(leapTargetReticle);
+
+  // =========================================================================
+  // INSTRUMENT-STYLE ACCORDION CHARACTERS
+  // =========================================================================
+  function createAbbotCharacter(bellowsColor, trimColor, headColor, bowOrHatColor, isMary = false) {
+    const charGroup = new THREE.Group();
+    const pleats = [];
+    const pleatCount = 5;
+
+    for (let p = 0; p < pleatCount; p++) {
+      const expand = (p % 2 === 0) ? 1.0 : 0.86;
+      const geo = new THREE.BoxGeometry(1.12 * expand, 0.20, 0.78 * expand);
+      const mat = new THREE.MeshToonMaterial({
+        color: p % 2 === 0 ? bellowsColor : trimColor
+      });
+      const pleat = new THREE.Mesh(geo, mat);
+      pleat.position.y = p * 0.21;
+      charGroup.add(pleat);
+      pleats.push({ mesh: pleat, isTrim: p % 2 !== 0, baseColor: p % 2 === 0 ? bellowsColor : trimColor });
+    }
+
+    const keyBoardGroup = new THREE.Group();
+    keyBoardGroup.position.set(-0.24, (pleatCount - 1) * 0.105, 0.43);
+
+    const whitePanel = new THREE.Mesh(
+      new THREE.BoxGeometry(0.42, 0.96, 0.08),
+      new THREE.MeshToonMaterial({ color: 0xf8fafc })
+    );
+    keyBoardGroup.add(whitePanel);
+
+    const blackKeyMat = new THREE.MeshToonMaterial({ color: 0x111827 });
+    const blackKeyOffsets = [-0.34, -0.20, 0.04, 0.18, 0.32];
+    blackKeyOffsets.forEach(ky => {
+      const bKey = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.075, 0.06), blackKeyMat);
+      bKey.position.set(-0.07, ky, 0.055);
+      keyBoardGroup.add(bKey);
+    });
+    charGroup.add(keyBoardGroup);
+
+    const buttonMat = new THREE.MeshToonMaterial({ color: 0xfef3c7 });
+    for (let row = 0; row < 3; row++) {
+      for (let col = 0; col < 2; col++) {
+        const btn = new THREE.Mesh(new THREE.SphereGeometry(0.042, 8, 8), buttonMat);
+        btn.position.set(0.22 + col * 0.14, 0.22 + row * 0.24, 0.43);
+        charGroup.add(btn);
+      }
+    }
+
+    const strap = new THREE.Mesh(
+      new THREE.BoxGeometry(0.11, 1.18, 0.86),
+      new THREE.MeshToonMaterial({ color: 0xfbbf24 })
+    );
+    strap.position.set(0.18, 0.44, 0);
+    strap.rotation.z = -0.32;
+    charGroup.add(strap);
+
+    const headY = pleatCount * 0.21 + 0.38;
+    const head = new THREE.Mesh(
+      new THREE.SphereGeometry(0.50, 18, 18),
+      new THREE.MeshToonMaterial({ color: headColor })
+    );
+    head.position.y = headY;
+    charGroup.add(head);
+
+    const topper = new THREE.Mesh(
+      isMary ? new THREE.OctahedronGeometry(0.28, 0) : new THREE.ConeGeometry(0.40, 0.46, 12),
+      new THREE.MeshToonMaterial({ color: bowOrHatColor })
+    );
+    topper.position.set(isMary ? 0.28 : 0, headY + 0.50, 0);
+    charGroup.add(topper);
+
+    const eyeWhiteGeo = new THREE.SphereGeometry(0.13, 10, 10);
+    const eyeWhiteMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    const pupilGeo = new THREE.SphereGeometry(0.07, 8, 8);
+    const pupilMat = new THREE.MeshBasicMaterial({ color: 0x111111 });
+
+    [-0.18, 0.18].forEach(ex => {
+      const ew = new THREE.Mesh(eyeWhiteGeo, eyeWhiteMat);
+      ew.position.set(ex, headY + 0.08, 0.42);
+      const ep = new THREE.Mesh(pupilGeo, pupilMat);
+      ep.position.set(ex, headY + 0.08, 0.51);
+      charGroup.add(ew, ep);
+    });
+
+    function buildArm(side) {
+      const pivot = new THREE.Group();
+      pivot.position.set(side * 0.64, pleatCount * 0.14, 0);
+      const limb = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.085, 0.085, 0.66, 8),
+        new THREE.MeshToonMaterial({ color: bellowsColor })
+      );
+      limb.position.set(side * 0.25, -0.18, 0);
+      limb.rotation.z = side * 0.55;
+
+      const hand = new THREE.Mesh(
+        new THREE.SphereGeometry(0.17, 10, 10),
+        new THREE.MeshToonMaterial({ color: 0xfef3c7 })
+      );
+      hand.position.set(side * 0.48, -0.44, 0);
+      pivot.add(limb, hand);
+      charGroup.add(pivot);
+      return { pivot, hand };
+    }
+
+    const leftArm = buildArm(-1);
+    const rightArm = buildArm(1);
+
+    return { group: charGroup, pleats, keyBoardGroup, strap, leftArm, rightArm, head };
+  }
+
+  const gary = createAbbotCharacter(0x1d4ed8, 0x0f172a, 0xfbbf24, 0x38bdf8, false);
+  const mary = createAbbotCharacter(0xbe185d, 0x2e1065, 0xc084fc, 0xf472b6, true);
+  scene.add(gary.group, mary.group);
+
+  function applyCharacterPerkAppearance() {
+    const useGold = records.activePerks.gold_bellows && records.careerPts >= PERKS_CATALOG[0].reqPts;
+    [gary, mary].forEach((charObj) => {
+      charObj.pleats.forEach((p) => {
+        if (p.isTrim && useGold) p.mesh.material.color.setHex(0xfbbf24);
+        else p.mesh.material.color.setHex(p.baseColor);
+      });
+      charObj.strap.material.color.setHex(useGold ? 0xfef08a : 0xfbbf24);
+    });
+  }
+
+  const tetherMat = new THREE.LineBasicMaterial({ color: 0xfbbf24 });
+  const tetherGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]);
+  const tetherLine = new THREE.Line(tetherGeo, tetherMat);
+  scene.add(tetherLine);
+
+  // =========================================================================
+  // 3. 10-LEVEL PROGRESSION, HIGH SCORES & GAME STATE
+  // =========================================================================
+  const state = {
+    mode: 'climb',
+    location: 'MAIN',
+    runNumber: 1,
+    currentLevel: 1, // 1..10
+    gameBeaten: false,
+    transport: 'PLAY',
+    selectedFX: 'jump',
+    realm: 0.20,
+    tower: 0.25,
+    litStep: 0,
+    garyStep: 0,
+    prevGaryStep: 0,
+    maryStep: 1,
+    visitedBonusRooms: new Set(),
+    bonusTimer: 0,
+    bonusCollected: 0,
+    footholdStability: 1.0,
+    rhythmStreak: 1,
+    spinDir: 1,
+    vortexFlip: 1,
+    bellowsPulse: 0,
+    landingSquash: 0,
+    splitFactor: 0,
+    targetSplit: 0,
+    jumpPhase: 0,
+    isJumping: false,
+    jumpArcHeight: 1.85,
+    bufferedAction: null,
+    bufferExpire: 0,
+    runScore: 0,
+    aiCutTimer: 0,
+    aiPhase: 'WALTZ_CLIMB'
+  };
+
+  const REALM_ZONES = [
+    "Zone 0: Microscopic Grain-to-Speck",
+    "Zone 1: Silken Bellows Mist",
+    "Zone 2: Parametric Bellows Dawn",
+    "Zone 3: Counter-Gear Clockwork",
+    "Zone 4: Inversion Mirror Fold",
+    "Zone 5: Cherry Abbott Hand-Hold Waltz",
+    "Zone 6: Multi-Spiral Fractal Split",
+    "Zone 7: Colossal Spire Ascent",
+    "Zone 8: Dimensional Lapping Plane",
+    "Zone 9: Housing Transcendence",
+    "Zone 10: Summit Whisper Singularity"
+  ];
+
+  const toastEl = document.getElementById('toast');
+  let toastTimeout = null;
+  function showToast(msg) {
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    clearTimeout(toastTimeout);
+    toastTimeout = setTimeout(() => toastEl.classList.remove('show'), 1850);
+  }
+
+  function addPoints(basePts) {
+    const lvlCfg = LEVELS[state.currentLevel - 1] || LEVELS[0];
+    const hasEncore = records.activePerks.encore_crown && isPerkUnlocked(PERKS_CATALOG[3]);
+    const encoreMult = hasEncore ? 1.25 : 1.0;
+    const totalGain = Math.round(basePts * lvlCfg.bonusMult * encoreMult);
+
+    state.runScore += totalGain;
+    records.careerPts += totalGain;
+    if (state.runScore > records.highScore) {
+      records.highScore = state.runScore;
+    }
+    if (state.currentLevel > records.bestLevel) {
+      records.bestLevel = state.currentLevel;
+    }
+    saveRecords();
+    applyCharacterPerkAppearance();
+    return totalGain;
+  }
+
+  function getLevelConfig() {
+    return LEVELS[Math.min(LEVELS.length - 1, Math.max(0, state.currentLevel - 1))];
+  }
+
+  function applyBackdropTheme() {
+    if (state.location === 'VELVET_LOUNGE') {
+      domeMat.color.setHex(0x062c22);
+      renderer.setClearColor(0x05221a, 1);
+      scene.fog.color.setHex(0x062c22);
+      ambientLight.color.setHex(0x34d399);
+      return;
+    }
+    if (state.location === 'CLOCKWORK_VAULT') {
+      domeMat.color.setHex(0x2d1226);
+      renderer.setClearColor(0x220d1d, 1);
+      scene.fog.color.setHex(0x2d1226);
+      ambientLight.color.setHex(0xf472b6);
+      return;
+    }
+
+    const lvlCfg = getLevelConfig();
+    const zoneShift = (state.realm - 0.2) * 0.14;
+    const hue = (lvlCfg.hue + zoneShift + state.tower * 0.08 + 1) % 1;
+    const domeLightness = 0.05 + state.tower * 0.07;
+    domeMat.color.setHSL(hue, 0.68, domeLightness);
+    renderer.setClearColor(new THREE.Color().setHSL(hue, 0.62, domeLightness * 0.7), 1);
+    scene.fog.color.setHSL(hue, 0.58, 0.06 + state.tower * 0.04);
+    ambientLight.color.setHSL(hue, 0.78, 0.65);
+
+    strataRings.forEach((ring, idx) => {
+      ring.material.color.setHSL((hue + idx * 0.09) % 1, 0.85, 0.56 + state.tower * 0.18);
+      ring.material.opacity = 0.15 + state.tower * 0.20;
+      ring.position.y = (idx - 2) * (4 + state.tower * 5);
+    });
+    starMat.color.setHSL((hue + 0.16) % 1, 0.72, 0.84);
+  }
+
+  function enterBonusRoom(roomId, title, bonusPoints) {
+    state.location = roomId;
+    state.visitedBonusRooms.add(roomId);
+    state.bonusTimer = 14.0;
+    state.bonusCollected = 0;
+    const gained = addPoints(bonusPoints);
+    audio.enterBonusSong(roomId);
+
+    bonusOrbs.forEach((orb, idx) => {
+      orb.visible = true;
+      orb.userData.collected = false;
+      orb.userData.stepTarget = (idx * 5 + 3) % MAIN_STEPS;
+    });
+    bonusRoomGroup.visible = true;
+    document.getElementById('btnExitBonus').style.display = 'inline-block';
+    applyBackdropTheme();
+    spawnShockwaveRing(gary.group.position, 0x34d399);
+    showToast(`🚪 ${title}! New Room Song (+${gained})`);
+    updateHUD();
+  }
+
+  function exitBonusRoomToMain() {
+    if (state.location !== 'VELVET_LOUNGE' && state.location !== 'CLOCKWORK_VAULT') return;
+    state.location = 'MAIN';
+    state.footholdStability = 1.0;
+    bonusRoomGroup.visible = false;
+    document.getElementById('btnExitBonus').style.display = 'none';
+    audio.returnToMainSong();
+    applyBackdropTheme();
+    spawnShockwaveRing(gary.group.position, 0x38bdf8);
+    showToast(`🎵 Returned to Level ${state.currentLevel} — Unique Level Track Resumed!`);
+    updateHUD();
+  }
+
+  function advanceToNextLevel() {
+    const completedLevel = state.currentLevel;
+    const clearBonus = addPoints(600 * completedLevel);
+
+    if (completedLevel >= LEVELS.length) {
+      // Beat Level 10 = Beat the Game!
+      records.gameClears++;
+      saveRecords();
+      applyCharacterPerkAppearance();
+      state.gameBeaten = true;
+      state.location = 'GAME_WON';
+      audio.playFanfareSound();
+      spawnShockwaveRing(gary.group.position, 0xfbbf24);
+      showToast(`👑 YOU BEAT THE GAME! Level 10 Crown Conquered! Clears: ${records.gameClears} (+${clearBonus})`);
+      updateHUD();
+      return;
+    }
+
+    // Advance to Level +1 with fresh non-repeating track, fresh bonus rooms, and new visual/sound identity
+    state.currentLevel++;
+    state.location = 'MAIN';
+    state.prevGaryStep = 0;
+    state.garyStep = 0;
+    state.maryStep = 1;
+    state.visitedBonusRooms.clear();
+    state.footholdStability = 1.0;
+    state.tower = 0.25;
+    document.getElementById('dialTower').value = 25;
+    audio.towerValue = 0.25;
+    bonusRoomGroup.visible = false;
+    document.getElementById('btnExitBonus').style.display = 'none';
+
+    audio.generateLevelTrack(state.currentLevel, false);
+    applyBackdropTheme();
+    audio.playFanfareSound();
+    spawnShockwaveRing(gary.group.position, 0x34d399);
+    const nextCfg = getLevelConfig();
+    showToast(`🎉 LEVEL ${completedLevel} CLEARED (+${clearBonus}) → LEVEL ${state.currentLevel}: ${nextCfg.name}!`);
+    updateHUD();
+  }
+
+  function startNewGameRun() {
+    state.runNumber++;
+    state.currentLevel = 1;
+    state.gameBeaten = false;
+    state.runScore = 0;
+    state.rhythmStreak = 1;
+    state.location = 'MAIN';
+    state.prevGaryStep = 0;
+    state.garyStep = 0;
+    state.maryStep = 1;
+    state.visitedBonusRooms.clear();
+    state.footholdStability = 1.0;
+    state.tower = 0.25;
+    document.getElementById('dialTower').value = 25;
+    audio.towerValue = 0.25;
+    bonusRoomGroup.visible = false;
+    document.getElementById('btnExitBonus').style.display = 'none';
+    audio.generateLevelTrack(1, true);
+    applyBackdropTheme();
+    spawnShockwaveRing(gary.group.position, 0xfbbf24);
+    showToast(`✨ RUN #${state.runNumber} BEGUN — Brand-New Non-Repeating Track Seeded!`);
+    updateHUD();
+  }
+
+  function triggerAbbotJump(playSound = true, arcHeight = 1.85) {
+    state.isJumping = true;
+    state.jumpPhase = 0;
+    state.jumpArcHeight = arcHeight;
+    state.bellowsPulse = 1.25;
+    spawnShockwaveRing(gary.group.position, state.splitFactor < 0.35 ? 0xfbbf24 : 0x38bdf8);
+    if (playSound && audio.running) {
+      audio.triggerVoice(523.25, 0.20, false, true, true);
+    }
+  }
+
+  function toggleSplitState(forceValue = null) {
+    const next = forceValue !== null ? forceValue : (state.targetSplit > 0.5 ? 0 : 1);
+    if (next === 0 && state.targetSplit > 0.5) {
+      spawnShockwaveRing(gary.group.position, 0x34d399);
+      triggerAbbotJump(false, 1.8);
+    }
+    state.targetSplit = next;
+  }
+
+  function checkDestinationTriggers(stepIdx) {
+    if (state.location === 'VELVET_LOUNGE' || state.location === 'CLOCKWORK_VAULT') {
+      bonusOrbs.forEach((orb) => {
+        if (!orb.userData.collected && Math.abs(stepIdx - orb.userData.stepTarget) <= 2) {
+          orb.userData.collected = true;
+          orb.visible = false;
+          state.bonusCollected++;
+          const pts = addPoints(150 * state.rhythmStreak);
+          spawnShockwaveRing(gary.group.position, 0xfbbf24);
+          showToast(`✨ HARMONY ORB (${state.bonusCollected}/6)! +${pts}`);
+        }
+      });
+      return;
+    }
+
+    if (stepIdx === BONUS_STEP_1 && !state.visitedBonusRooms.has('VELVET_LOUNGE')) {
+      enterBonusRoom('VELVET_LOUNGE', 'VELVET BELLOWS LOUNGE', 300);
+      return;
+    }
+    if (stepIdx === BONUS_STEP_2 && !state.visitedBonusRooms.has('CLOCKWORK_VAULT')) {
+      enterBonusRoom('CLOCKWORK_VAULT', 'CLOCKWORK ECHO VAULT', 450);
+      return;
+    }
+    if (stepIdx >= SUMMIT_STEP && state.location === 'MAIN') {
+      advanceToNextLevel();
+    }
+  }
+
+  function scoreStepLanding(stepIdx, stepDelta) {
+    state.footholdStability = 1.0;
+
+    const beatMs = (60 / audio.tempo / 2) * 1000;
+    const sinceBeat = performance.now() - audio.lastBeatTime;
+    const isOnBeat = audio.running && (sinceBeat <= 135 || (beatMs - sinceBeat) <= 115);
+
+    if (isOnBeat && stepDelta > 0) {
+      state.rhythmStreak = Math.min(4, state.rhythmStreak + 1);
+    } else if (!isOnBeat && stepDelta > 0) {
+      state.rhythmStreak = Math.max(1, state.rhythmStreak - 1);
+    }
+
+    const mult = state.rhythmStreak;
+    if (stepIdx === state.litStep) {
+      const gained = addPoints(120 * mult);
+      showToast(`🎯 LIT STEP #${stepIdx} (x${mult})! +${gained}`);
+    } else if (stepDelta >= 2) {
+      const gained = addPoints(95 * mult);
+      showToast(`⬆ LEAP #${stepIdx} (x${mult})! +${gained}`);
+    } else if (isOnBeat && mult > 1) {
+      const gained = addPoints(45 * mult);
+      showToast(`♪ ON-BEAT #${stepIdx} • STREAK x${mult} (+${gained})`);
+    } else {
+      addPoints(30);
+    }
+
+    if (state.location === 'MAIN') {
+      const climbTower = Math.min(0.90, 0.20 + (stepIdx / SUMMIT_STEP) * 0.70);
+      state.tower = climbTower;
+      audio.towerValue = climbTower;
+      document.getElementById('dialTower').value = Math.round(climbTower * 100);
+      applyBackdropTheme();
+    }
+
+    checkDestinationTriggers(stepIdx);
+  }
+
+  function queueOrExecuteStep(actionType) {
+    if (state.isJumping && state.jumpPhase < 0.62) {
+      state.bufferedAction = actionType;
+      state.bufferExpire = performance.now() + 180;
+      return;
+    }
+    executeStepAction(actionType);
+  }
+
+  function executeStepAction(actionType) {
+    audio.init();
+    let target = state.garyStep;
+    let arc = 1.65;
+
+    if (actionType === 'NEXT') {
+      target = state.garyStep + 1;
+      arc = 1.55;
+    } else if (actionType === 'LEAP') {
+      target = state.garyStep + 2;
+      arc = 2.45;
+    } else if (actionType === 'PREV') {
+      target = state.garyStep - 1;
+      arc = 1.45;
+    } else if (actionType === 'LIT') {
+      target = state.litStep;
+      arc = 2.25;
+    }
+
+    const clamped = Math.max(0, Math.min(SUMMIT_STEP, target));
+    const delta = clamped - state.garyStep;
+    state.prevGaryStep = state.garyStep;
+    state.garyStep = clamped;
+    state.maryStep = (state.garyStep + 1) % BRANCH_STEPS;
+
+    triggerAbbotJump(true, arc);
+    scoreStepLanding(state.garyStep, delta);
+    updateHUD();
+  }
+
+  function renderVaultModal() {
+    document.getElementById('vaultHighScore').textContent = records.highScore.toLocaleString();
+    document.getElementById('vaultBestLevel').textContent = `${records.bestLevel}/10`;
+    document.getElementById('vaultClears').textContent = records.gameClears;
+    document.getElementById('vaultCareerPts').textContent = records.careerPts.toLocaleString();
+
+    const listEl = document.getElementById('perksList');
+    listEl.innerHTML = '';
+    PERKS_CATALOG.forEach((perk) => {
+      const unlocked = isPerkUnlocked(perk);
+      const active = !!records.activePerks[perk.id];
+      const row = document.createElement('div');
+      row.className = 'perk-item';
+
+      const reqText = perk.requiresClear
+        ? 'Req: Beat Level 10 (1+ Clear)'
+        : `Req: ${perk.reqPts.toLocaleString()} Career Pts`;
+
+      row.innerHTML = `
+        <div>
+          <div class="perk-title">${perk.title}</div>
+          <div class="perk-desc">${perk.desc} • <span style="color:${unlocked ? '#34d399' : '#fbbf24'}">${unlocked ? 'UNLOCKED' : reqText}</span></div>
+        </div>
+      `;
+
+      const toggleBtn = document.createElement('button');
+      toggleBtn.className = `btn ${unlocked ? (active ? 'mint' : '') : ''}`;
+      toggleBtn.textContent = !unlocked ? '🔒 Locked' : (active ? '✓ Active' : 'Enable');
+      toggleBtn.disabled = !unlocked;
+      toggleBtn.addEventListener('click', () => {
+        records.activePerks[perk.id] = !records.activePerks[perk.id];
+        saveRecords();
+        applyCharacterPerkAppearance();
+        renderVaultModal();
+        updateHUD();
+      });
+
+      row.appendChild(toggleBtn);
+      listEl.appendChild(row);
+    });
+  }
+
+  function updateHUD() {
+    const lvlCfg = getLevelConfig();
+    document.getElementById('levelSubTitle').textContent =
+      `Level ${state.currentLevel}/10: ${lvlCfg.name} • Gary & Mary`;
+
+    const rIdx = Math.min(10, Math.floor(state.realm * 10));
+    document.getElementById('realmPct').textContent = `${Math.round(state.realm * 100)}%`;
+    document.getElementById('realmLabel').textContent = REALM_ZONES[rIdx];
+
+    document.getElementById('towerPct').textContent = `${Math.round(state.tower * 100)}%`;
+    document.getElementById('towerLabel').textContent =
+      state.tower >= 0.92 ? "SUMMIT REACHED: Smallest Whisper Mode" :
+      state.tower > 0.65 ? "Colossal Tower Expansion" : "Ascending Gear-Spiral Flight";
+
+    const bondEl = document.getElementById('abbotBond');
+    if (state.splitFactor < 0.35) {
+      bondEl.textContent = "🤝 HAND-IN-HAND WALTZ";
+      bondEl.style.color = "#34d399";
+    } else {
+      bondEl.textContent = "🌀 MULTI-STAIRCASE DIVERGENCE";
+      bondEl.style.color = "#f472b6";
+    }
+
+    const locBadge = document.getElementById('locationBadge');
+    const stateInd = document.getElementById('transportState');
+    if (state.location === 'VELVET_LOUNGE') {
+      locBadge.textContent = `🎷 BONUS SONG: VELVET LOUNGE (${Math.ceil(state.bonusTimer)}s)`;
+      locBadge.style.color = '#34d399';
+      stateInd.textContent = 'BONUS ROOM 1';
+    } else if (state.location === 'CLOCKWORK_VAULT') {
+      locBadge.textContent = `🎹 BONUS SONG: CLOCKWORK VAULT (${Math.ceil(state.bonusTimer)}s)`;
+      locBadge.style.color = '#f472b6';
+      stateInd.textContent = 'BONUS ROOM 2';
+    } else if (state.location === 'GAME_WON') {
+      locBadge.textContent = `👑 GAME BEATEN! (${records.gameClears}x Clears)`;
+      locBadge.style.color = '#fbbf24';
+      stateInd.textContent = 'CAMPAIGN COMPLETE';
+    } else {
+      locBadge.textContent = `🎵 RUN #${state.runNumber} • LVL ${state.currentLevel} TRACK`;
+      locBadge.style.color = '#38bdf8';
+      stateInd.textContent = state.mode === 'climb' ? `LEVEL ${state.currentLevel} / 10` : (state.mode === 'studio' ? state.transport : `AI: ${state.aiPhase}`);
+    }
+
+    document.getElementById('gestureHint').style.display = state.mode === 'climb' ? 'block' : 'none';
+
+    const pct = Math.round((state.garyStep / SUMMIT_STEP) * 100);
+    document.getElementById('summitProgress').style.width = `${pct}%`;
+
+    const stabPct = Math.round(state.footholdStability * 100);
+    const stabEl = document.getElementById('footholdTimerPill');
+    stabEl.textContent = state.mode === 'climb' && state.location === 'MAIN'
+      ? `FOOTHOLD: ${stabPct}%`
+      : `ALTITUDE: ${pct}%`;
+    stabEl.style.color = stabPct < 35 ? '#f472b6' : '#34d399';
+
+    document.getElementById('stepPrecisionBox').textContent =
+      `LVL ${state.currentLevel}/10 • STEP #${state.garyStep}/${SUMMIT_STEP} | x${state.rhythmStreak}`;
+
+    document.getElementById('storyBanner').textContent =
+      `LVL ${state.currentLevel} (${lvlCfg.name}) • ${lvlCfg.tempo} BPM • ${lvlCfg.bonusMult.toFixed(2)}x Pts`;
+
+    document.getElementById('scoreBox').textContent =
+      `SCORE: ${state.runScore} | BEST: ${records.highScore}`;
+  }
+
+  function spawnShockwaveRing(pos, colorHex) {
+    const ring = new THREE.Mesh(
+      new THREE.RingGeometry(0.4, 0.72, 24),
+      new THREE.MeshBasicMaterial({ color: colorHex, side: THREE.DoubleSide, transparent: true, opacity: 0.95 })
+    );
+    ring.position.copy(pos);
+    ring.rotation.x = Math.PI / 2;
+    ring.userData = { life: 1.0, kind: 'ring' };
+    fxNodesGroup.add(ring);
+  }
+
+  function spawnFXNode(pos, type) {
+    if (type === 'jump') {
+      triggerAbbotJump(true, 1.85);
+      return;
+    }
+    if (type === 'split') {
+      toggleSplitState();
+      return;
+    }
+    const color = type === 'vortex' ? 0x38bdf8 : 0xfbbf24;
+    const mesh = new THREE.Mesh(
+      new THREE.OctahedronGeometry(0.58, 0),
+      new THREE.MeshBasicMaterial({ color, wireframe: true })
+    );
+    mesh.position.copy(pos);
+    mesh.userData = { life: 1.0, kind: 'octa' };
+    fxNodesGroup.add(mesh);
+
+    if (type === 'vortex') state.vortexFlip *= -1;
+    if (type === 'whisper') {
+      audio.whisperActive = true;
+      setTimeout(() => { audio.whisperActive = false; }, 1650);
+    }
+  }
+
+  // Vault Modal Listeners
+  document.getElementById('btnOpenVault').addEventListener('click', () => {
+    renderVaultModal();
+    document.getElementById('vaultModal').classList.add('open');
+  });
+  document.getElementById('btnCloseVault').addEventListener('click', () => {
+    document.getElementById('vaultModal').classList.remove('open');
+  });
+
+  // Precision Step & Game Controls
+  document.getElementById('btnStepPrev').addEventListener('click', () => queueOrExecuteStep('PREV'));
+  document.getElementById('btnStepNext').addEventListener('click', () => queueOrExecuteStep('NEXT'));
+  document.getElementById('btnStepLit').addEventListener('click', () => queueOrExecuteStep('LIT'));
+  document.getElementById('btnPrecisionLeap').addEventListener('click', () => queueOrExecuteStep('LEAP'));
+  document.getElementById('btnExitBonus').addEventListener('click', exitBonusRoomToMain);
+  document.getElementById('btnNewRun').addEventListener('click', () => {
+    audio.init();
+    startNewGameRun();
+  });
+
+  function setModeButtons(activeId) {
+    ['btnModeClimb', 'btnModeStudio', 'btnModeAIDance'].forEach(id => {
+      document.getElementById(id).classList.toggle('active', id === activeId);
+    });
+  }
+
+  document.getElementById('btnAudioStart').addEventListener('click', (e) => {
+    audio.init();
+    e.target.textContent = '🔊 TechroTone Live';
+    showToast(`TechroTone Active • Run #${state.runNumber} Level ${state.currentLevel}`);
+  });
+
+  document.getElementById('btnModeClimb').addEventListener('click', () => {
+    audio.init();
+    state.mode = 'climb';
+    state.transport = 'PLAY';
+    setModeButtons('btnModeClimb');
+    updateHUD();
+    showToast(`Level ${state.currentLevel}/10 Climb: Reach Step #35!`);
+  });
+
+  document.getElementById('btnModeStudio').addEventListener('click', () => {
+    state.mode = 'studio';
+    state.transport = 'PLAY';
+    setModeButtons('btnModeStudio');
+    updateHUD();
+    showToast('Studio Mode: Tap Viewport for Play / Stop / Edit');
+  });
+
+  document.getElementById('btnModeAIDance').addEventListener('click', () => {
+    audio.init();
+    state.mode = 'aidance';
+    state.transport = 'PLAY';
+    setModeButtons('btnModeAIDance');
+    updateHUD();
+    showToast('AI Choreography Dance Engine Engaged');
+  });
+
+  document.getElementById('dialRealm').addEventListener('input', (e) => {
+    state.realm = Number(e.target.value) / 100;
+    audio.realmValue = state.realm;
+    applyBackdropTheme();
+    const zone = Math.floor(state.realm * 10);
+    if (zone >= 6 && zone <= 8) toggleSplitState(1);
+    else if (zone < 6) toggleSplitState(0);
+    updateHUD();
+  });
+
+  document.getElementById('dialTower').addEventListener('input', (e) => {
+    const prev = state.tower;
+    state.tower = Number(e.target.value) / 100;
+    audio.towerValue = state.tower;
+    applyBackdropTheme();
+    if (prev < 0.92 && state.tower >= 0.92) {
+      toggleSplitState(0);
+      showToast('SUMMIT CLIMAX → SMALLEST CRYSTALLINE WHISPER');
+      audio.triggerVoice(523.25, 0.95, true, false, false);
+    }
+    updateHUD();
+  });
+
+  document.querySelectorAll('.fx-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      document.querySelectorAll('.fx-chip').forEach(c => c.classList.remove('selected'));
+      chip.classList.add('selected');
+      state.selectedFX = chip.dataset.fx;
+    });
+  });
+
+  document.getElementById('btnForesight').addEventListener('click', () => {
+    audio.init();
+    const isPreTurn = (audio.stepIndex % 4 === 3);
+    queueOrExecuteStep('LIT');
+    if (isPreTurn) {
+      const bonus = addPoints(250);
+      showToast(`⚡ PRE-PERCEPTIVE FORESIGHT LEAP! +${bonus}`);
+    } else {
+      const bonus = addPoints(75);
+      showToast(`♪ HARMONIC SYNC JUMP +${bonus}`);
+    }
+    updateHUD();
+  });
+
+  let pointerStart = { x: 0, y: 0, time: 0 };
+  let lastTapTime = 0;
+
+  canvas.addEventListener('pointerdown', (e) => {
+    pointerStart = { x: e.clientX, y: e.clientY, time: performance.now() };
+  });
+
+  canvas.addEventListener('pointerup', (e) => {
+    const dx = e.clientX - pointerStart.x;
+    const dy = e.clientY - pointerStart.y;
+    const dist = Math.hypot(dx, dy);
+    audio.init();
+
+    if (state.mode === 'climb') {
+      if (dy < -28 && Math.abs(dy) > Math.abs(dx)) {
+        queueOrExecuteStep('LEAP');
+        return;
+      }
+      if (dy > 28 && Math.abs(dy) > Math.abs(dx)) {
+        queueOrExecuteStep('PREV');
+        return;
+      }
+      if (dist <= 18) {
+        const now = performance.now();
+        if (now - lastTapTime < 260) {
+          lastTapTime = 0;
+          queueOrExecuteStep('LIT');
+        } else {
+          lastTapTime = now;
+          queueOrExecuteStep('NEXT');
+        }
+      }
+      return;
+    }
+
+    if (dist > 14) return;
+    if (state.mode === 'studio') {
+      if (state.transport === 'PLAY') {
+        state.transport = 'STOP_EDIT';
+        showToast('TOUCH / STOP — Tap again to trigger FX & Resume');
+      } else {
+        spawnFXNode(gary.group.position, state.selectedFX);
+        state.transport = 'PLAY';
+        showToast(`FX [${state.selectedFX.toUpperCase()}] Applied → TOUCH / PLAY`);
+      }
+      updateHUD();
+    } else {
+      document.getElementById('btnForesight').click();
+    }
+  });
+
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowUp' || e.key === 'w') queueOrExecuteStep('NEXT');
+    else if (e.key === ' ') { e.preventDefault(); queueOrExecuteStep('LEAP'); }
+    else if (e.key === 'ArrowDown' || e.key === 's') queueOrExecuteStep('PREV');
+    else if (e.key === 'Enter') queueOrExecuteStep('LIT');
+  });
+
+  // =========================================================================
+  // 4. MAIN ANIMATION LOOP
+  // =========================================================================
+  const clock = new THREE.Clock();
+  let noteAccum = 0;
+  let camAngleSmooth = 0;
+  let camYSmooth = 6;
+  applyCharacterPerkAppearance();
+  applyBackdropTheme();
+
+  function animate() {
+    requestAnimationFrame(animate);
+    const dt = Math.min(clock.getDelta(), 0.05);
+    const elapsed = clock.getElapsedTime();
+
+    backdropStars.rotation.y += dt * (0.04 + state.tower * 0.14);
+    backdropStars.position.y = -state.tower * 12;
+    strataRings.forEach((ring, idx) => {
+      ring.rotation.z += dt * (0.12 + idx * 0.04) * (idx % 2 === 0 ? 1 : -1);
+    });
+
+    if (state.location === 'VELVET_LOUNGE' || state.location === 'CLOCKWORK_VAULT') {
+      state.bonusTimer -= dt;
+      if (state.bonusTimer <= 0) {
+        exitBonusRoomToMain();
+      } else if (Math.floor(state.bonusTimer * 2) !== Math.floor((state.bonusTimer + dt) * 2)) {
+        updateHUD();
+      }
+    }
+
+    // Fair Challenge: Foothold Stability Drain scales gently across Levels 1..10
+    if (state.mode === 'climb' && state.location === 'MAIN' && state.garyStep > 0 && state.garyStep < SUMMIT_STEP) {
+      const lvlCfg = getLevelConfig();
+      const gripMult = (records.activePerks.steady_grip && isPerkUnlocked(PERKS_CATALOG[1])) ? 0.70 : 1.0;
+      const drainRate = (lvlCfg.drain + (state.garyStep / SUMMIT_STEP) * 0.05) * gripMult;
+      state.footholdStability -= dt * drainRate;
+      if (state.footholdStability <= 0) {
+        state.footholdStability = 1.0;
+        state.rhythmStreak = 1;
+        state.prevGaryStep = state.garyStep;
+        state.garyStep = Math.max(0, state.garyStep - 3);
+        state.maryStep = (state.garyStep + 1) % BRANCH_STEPS;
+        audio.playSlipSound();
+        spawnShockwaveRing(gary.group.position, 0xf472b6);
+        showToast(`💨 BELLOWS SLIP! Slid back 3 steps to #${state.garyStep} — Keep Climbing!`);
+        updateHUD();
+      } else if (Math.floor(state.footholdStability * 10) !== Math.floor((state.footholdStability + dt * drainRate) * 10)) {
+        updateHUD();
+      }
+    }
+
+    if (state.mode === 'aidance') {
+      state.aiCutTimer += dt;
+      const cycle = state.aiCutTimer % 14;
+      if (cycle < 4.0) {
+        state.aiPhase = 'WALTZ_CLIMB';
+        state.transport = 'PLAY';
+        state.spinDir = 1;
+        state.targetSplit = 0;
+      } else if (cycle < 8.2) {
+        state.aiPhase = 'MULTI_SPIRAL_SPLIT';
+        state.transport = 'PLAY';
+        state.targetSplit = 1;
+      } else if (cycle < 9.1) {
+        state.aiPhase = 'SUSPEND_EDIT';
+        state.transport = 'STOP_EDIT';
+      } else if (cycle < 12.2) {
+        state.aiPhase = 'VORTEX_REUNION';
+        state.transport = 'PLAY';
+        state.spinDir = -1;
+        state.targetSplit = 0;
+      } else {
+        state.aiPhase = 'SUMMIT_WHISPER_BLEND';
+        state.transport = 'PLAY';
+      }
+      if (Math.floor(state.aiCutTimer * 2) !== Math.floor((state.aiCutTimer - dt) * 2)) {
+        updateHUD();
+      }
+    }
+
+    state.splitFactor += (state.targetSplit - state.splitFactor) * Math.min(1, dt * 3.5);
+
+    if (state.transport === 'PLAY') {
+      noteAccum += dt;
+      const beatInterval = 60 / audio.tempo / 2;
+      if (noteAccum >= beatInterval) {
+        noteAccum = 0;
+        const note = audio.nextGenerativeNote(state.splitFactor > 0.45);
+        state.litStep = (state.litStep + note.direction + MAIN_STEPS) % MAIN_STEPS;
+        if (state.mode === 'aidance') {
+          state.prevGaryStep = state.garyStep;
+          state.garyStep = state.litStep;
+          state.maryStep = (state.garyStep + 1) % BRANCH_STEPS;
+        }
+        state.bellowsPulse = note.isTell ? 1.05 : 0.45;
+        if (note.isLeap && !state.isJumping && state.mode !== 'climb' && Math.random() < 0.45) {
+          triggerAbbotJump(false, 1.85);
+        }
+        updateHUD();
+      }
+    }
+
+    state.bellowsPulse = Math.max(0, state.bellowsPulse - dt * 2.3);
+    state.landingSquash = Math.max(0, state.landingSquash - dt * 4.5);
+
+    let jumpArcY = 0;
+    let jumpLerpT = 1.0;
+    if (state.isJumping) {
+      state.jumpPhase += dt * 3.1;
+      if (state.jumpPhase >= 1) {
+        state.jumpPhase = 0;
+        state.isJumping = false;
+        state.landingSquash = 1.0;
+        spawnShockwaveRing(gary.group.position, 0xa78bfa);
+
+        if (state.bufferedAction && performance.now() <= state.bufferExpire) {
+          const nextAct = state.bufferedAction;
+          state.bufferedAction = null;
+          executeStepAction(nextAct);
+        } else {
+          state.bufferedAction = null;
+        }
+      } else {
+        jumpLerpT = state.jumpPhase;
+        jumpArcY = Math.sin(state.jumpPhase * Math.PI) * state.jumpArcHeight;
+      }
+    }
+
+    const isSummitWhisper = (state.tower >= 0.92 && state.location !== 'GAME_WON') || audio.whisperActive;
+    const radialScale = isSummitWhisper ? 0.22 : (0.65 + state.tower * 2.5 + Math.sin(elapsed * 1.4) * 0.22);
+    const verticalStretch = isSummitWhisper ? 0.08 : (0.28 + state.tower * 0.66 + state.bellowsPulse * 0.12);
+
+    if (state.transport === 'PLAY') {
+      const lvlSpeedBoost = 1 + (state.currentLevel - 1) * 0.04;
+      mainSpiralGroup.rotation.y += dt * 0.46 * lvlSpeedBoost * state.spinDir * state.vortexFlip;
+      innerGearGroup.rotation.y -= dt * 0.95 * lvlSpeedBoost * state.spinDir * state.vortexFlip;
+      branchSpiralA.rotation.y -= dt * 0.78 * state.spinDir;
+      branchSpiralB.rotation.y += dt * 0.88 * state.spinDir;
+    }
+
+    const nextStepIdx = Math.min(SUMMIT_STEP, state.garyStep + 1);
+    const leapStepIdx = Math.min(SUMMIT_STEP, state.garyStep + 2);
+
+    mainSteps.forEach((mesh, i) => {
+      const t = i / MAIN_STEPS;
+      const angle = t * Math.PI * 4.5;
+      const radius = (2.6 + t * 3.8) * radialScale;
+      const y = (i - MAIN_STEPS / 2) * verticalStretch;
+      mesh.position.set(Math.cos(angle) * radius, y, Math.sin(angle) * radius);
+      mesh.rotation.y = -angle + (state.vortexFlip < 0 ? Math.PI * 0.25 : 0);
+      mesh.scale.setScalar(isSummitWhisper ? 0.25 : (0.75 + state.tower * 0.52));
+
+      if (mesh.children.length > 0) {
+        mesh.children[0].rotation.y += dt * 2.4;
+      }
+
+      const isLit = (i === state.litStep);
+      const isSelected = (i === state.garyStep);
+      const isNext = (i === nextStepIdx && state.mode === 'climb');
+      const isDest = (i === BONUS_STEP_1 || i === BONUS_STEP_2 || i === SUMMIT_STEP);
+      mesh.material.emissive.setHex(
+        isLit ? 0x38bdf8 :
+        (isSelected ? 0x34d399 :
+        (isNext ? 0x1e3a8a :
+        (isDest ? (i === SUMMIT_STEP ? 0x92400e : 0x065f46) : 0x000000)))
+      );
+      mesh.material.emissiveIntensity = (isLit || isSelected) ? 1.45 : (isNext ? 0.95 : (isDest ? 0.85 : 0));
+    });
+
+    if (bonusRoomGroup.visible) {
+      bonusOrbs.forEach((orb, idx) => {
+        if (!orb.visible) return;
+        const targetStep = mainSteps[orb.userData.stepTarget];
+        orb.position.copy(targetStep.position).applyMatrix4(mainSpiralGroup.matrixWorld);
+        orb.position.y += 1.2 + Math.sin(elapsed * 4 + idx) * 0.25;
+        orb.rotation.y += dt * 3;
+      });
+    }
+
+    const branchVis = state.splitFactor > 0.03 && !isSummitWhisper;
+    branchSpiralA.visible = branchVis;
+    branchSpiralB.visible = branchVis;
+    if (branchVis) {
+      branchSpiralA.position.set(Math.cos(elapsed * 0.7) * 4.2 * state.splitFactor, 1.4 * state.splitFactor, Math.sin(elapsed * 0.7) * 4.2 * state.splitFactor);
+      branchSpiralA.rotation.z = 0.28 * state.splitFactor;
+
+      branchSpiralB.position.set(-Math.cos(elapsed * 0.7) * 4.2 * state.splitFactor, -1.4 * state.splitFactor, -Math.sin(elapsed * 0.7) * 4.2 * state.splitFactor);
+      branchSpiralB.rotation.z = -0.28 * state.splitFactor;
+
+      branchASteps.forEach((mesh, i) => {
+        const t = i / BRANCH_STEPS;
+        const angle = t * Math.PI * 4;
+        const r = (1.8 + t * 2.8) * radialScale * state.splitFactor;
+        const y = (i - BRANCH_STEPS / 2) * verticalStretch * 0.9;
+        mesh.position.set(Math.cos(angle) * r, y, Math.sin(angle) * r);
+        mesh.rotation.y = -angle;
+        mesh.scale.setScalar(0.5 + 0.5 * state.splitFactor);
+      });
+
+      branchBSteps.forEach((mesh, i) => {
+        const t = i / BRANCH_STEPS;
+        const angle = -t * Math.PI * 4;
+        const r = (1.8 + t * 2.8) * radialScale * state.splitFactor;
+        const y = (i - BRANCH_STEPS / 2) * verticalStretch * 0.9;
+        mesh.position.set(Math.cos(angle) * r, y, Math.sin(angle) * r);
+        mesh.rotation.y = -angle;
+        mesh.scale.setScalar(0.5 + 0.5 * state.splitFactor);
+      });
+    }
+
+    innerSteps.forEach((mesh, i) => {
+      const t = i / INNER_STEPS;
+      const angle = -t * Math.PI * 6;
+      const radius = 1.65 * radialScale;
+      const y = (i - INNER_STEPS / 2) * verticalStretch * 1.25;
+      mesh.position.set(Math.cos(angle) * radius, y, Math.sin(angle) * radius);
+      mesh.rotation.x = Math.PI / 2;
+      mesh.rotation.z = angle * 2;
+      mesh.scale.setScalar(isSummitWhisper ? 0.2 : 0.9);
+    });
+
+    mainSpiralGroup.updateMatrixWorld();
+    branchSpiralB.updateMatrixWorld();
+
+    const showReticles = (state.mode === 'climb' && !isSummitWhisper && state.garyStep < SUMMIT_STEP);
+    nextTargetReticle.visible = showReticles;
+    leapTargetReticle.visible = showReticles && (leapStepIdx > nextStepIdx);
+    if (showReticles) {
+      const nextWorld = mainSteps[nextStepIdx].position.clone().applyMatrix4(mainSpiralGroup.matrixWorld);
+      nextTargetReticle.position.copy(nextWorld).add(new THREE.Vector3(0, 0.26, 0));
+      nextTargetReticle.scale.setScalar(1 + Math.sin(elapsed * 8) * 0.12);
+
+      const leapWorld = mainSteps[leapStepIdx].position.clone().applyMatrix4(mainSpiralGroup.matrixWorld);
+      leapTargetReticle.position.copy(leapWorld).add(new THREE.Vector3(0, 0.26, 0));
+      leapTargetReticle.scale.setScalar(1 + Math.cos(elapsed * 8) * 0.12);
+    }
+
+    const prevWorld = mainSteps[state.prevGaryStep].position.clone().applyMatrix4(mainSpiralGroup.matrixWorld);
+    const currWorld = mainSteps[state.garyStep].position.clone().applyMatrix4(mainSpiralGroup.matrixWorld);
+    const garyBase = prevWorld.lerp(currWorld, jumpLerpT);
+
+    const rightDir = new THREE.Vector3(1, 0, 0).applyQuaternion(camera.quaternion);
+    const handHoldTarget = garyBase.clone().addScaledVector(rightDir, 1.32);
+    const splitStepMesh = branchBSteps[state.maryStep % BRANCH_STEPS];
+    const divergentTarget = splitStepMesh.position.clone().applyMatrix4(branchSpiralB.matrixWorld);
+    const maryBase = handHoldTarget.clone().lerp(divergentTarget, state.splitFactor);
+
+    gary.group.position.lerp(garyBase.clone().add(new THREE.Vector3(0, 0.65 + jumpArcY, 0)), 0.34);
+    mary.group.position.lerp(maryBase.clone().add(new THREE.Vector3(0, 0.65 + jumpArcY, 0)), 0.34);
+
+    const squashFactor = 1 - state.landingSquash * 0.24;
+    const stretchY = (1 + (state.isJumping ? Math.sin(state.jumpPhase * Math.PI) * 0.45 : state.bellowsPulse * 0.42) + Math.sin(elapsed * 5) * 0.08) * squashFactor;
+    gary.pleats.forEach((p, idx) => { p.mesh.position.y = idx * 0.21 * stretchY; });
+    mary.pleats.forEach((p, idx) => { p.mesh.position.y = idx * 0.21 * (state.isJumping ? stretchY : (2.02 - stretchY)); });
+
+    gary.keyBoardGroup.scale.y = 0.85 + stretchY * 0.15;
+    mary.keyBoardGroup.scale.y = 0.85 + (2.02 - stretchY) * 0.15;
+
+    gary.group.lookAt(camera.position.x, gary.group.position.y, camera.position.z);
+    mary.group.lookAt(camera.position.x, mary.group.position.y, camera.position.z);
+
+    const armSwing = Math.sin(elapsed * 7.5) * 0.65;
+    const jumpRaise = state.isJumping ? Math.sin(state.jumpPhase * Math.PI) * 1.45 : 0;
+
+    if (state.splitFactor < 0.35) {
+      gary.rightArm.pivot.rotation.z = 0.85;
+      gary.rightArm.pivot.rotation.x = 0.15;
+      mary.leftArm.pivot.rotation.z = -0.85;
+      mary.leftArm.pivot.rotation.x = 0.15;
+
+      gary.leftArm.pivot.rotation.x = armSwing - jumpRaise;
+      gary.leftArm.pivot.rotation.z = -0.25 - jumpRaise * 0.4;
+      mary.rightArm.pivot.rotation.x = -armSwing - jumpRaise;
+      mary.rightArm.pivot.rotation.z = 0.25 + jumpRaise * 0.4;
+
+      const gHandPos = new THREE.Vector3();
+      const mHandPos = new THREE.Vector3();
+      gary.rightArm.hand.getWorldPosition(gHandPos);
+      mary.leftArm.hand.getWorldPosition(mHandPos);
+      tetherGeo.setFromPoints([gHandPos, mHandPos]);
+      tetherMat.color.setHex(0xfbbf24);
+    } else {
+      gary.leftArm.pivot.rotation.x = armSwing - jumpRaise;
+      gary.rightArm.pivot.rotation.x = -armSwing - jumpRaise;
+      gary.rightArm.pivot.rotation.z = 0.2;
+
+      mary.leftArm.pivot.rotation.x = -armSwing - jumpRaise;
+      mary.leftArm.pivot.rotation.z = -0.2;
+      mary.rightArm.pivot.rotation.x = armSwing - jumpRaise;
+
+      tetherGeo.setFromPoints([gary.group.position, mary.group.position]);
+      tetherMat.color.setHex(0xf472b6);
+    }
+
+    for (let i = fxNodesGroup.children.length - 1; i >= 0; i--) {
+      const node = fxNodesGroup.children[i];
+      if (node.userData.kind === 'ring') {
+        node.scale.addScalar(dt * 4.5);
+        node.material.opacity = Math.max(0, node.userData.life);
+        node.userData.life -= dt * 1.4;
+      } else {
+        node.rotation.y += dt * 3;
+        node.scale.addScalar(dt * 1.6);
+        node.userData.life -= dt * 0.45;
+      }
+      if (node.userData.life <= 0) fxNodesGroup.remove(node);
+    }
+
+    const camDist = isSummitWhisper ? 7.5 : (16.5 + state.tower * 11 + state.splitFactor * 3.5);
+    const targetCamAngle = state.mode === 'climb'
+      ? Math.atan2(currWorld.x, currWorld.z) + 0.38
+      : elapsed * 0.22;
+
+    let angleDiff = targetCamAngle - camAngleSmooth;
+    while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+    while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+    camAngleSmooth += angleDiff * Math.min(1, dt * 2.6);
+
+    const targetCamY = currWorld.y + 4.8;
+    camYSmooth += (targetCamY - camYSmooth) * Math.min(1, dt * 3.2);
+
+    camera.position.x = Math.sin(camAngleSmooth) * camDist;
+    camera.position.z = Math.cos(camAngleSmooth) * camDist;
+    camera.position.y = camYSmooth;
+    camera.lookAt(currWorld.x * 0.35, currWorld.y + 1.2, currWorld.z * 0.35);
+
+    renderer.render(scene, camera);
+  }
+
+  window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+
+  updateHUD();
+  animate();
+})();
+</script>
+</body>
+</html>
